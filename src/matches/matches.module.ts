@@ -1,0 +1,36 @@
+import { Module } from "@nestjs/common";
+import { MongooseModule } from "@nestjs/mongoose";
+import { MatchesController } from "./matches.controller";
+import { MatchesService } from "./matches.service";
+import { Match, MatchSchema } from "./schemas/match.schema";
+import { Innings, InningsSchema } from "./schemas/innings.schema";
+import { Ball, BallSchema } from "./schemas/ball.schema";
+import {
+  PlayerMatchStats,
+  PlayerMatchStatsSchema,
+} from "./schemas/player-match-stats.schema";
+import { Partnership, PartnershipSchema } from "./schemas/partnership.schema";
+import { MatchEvent, MatchEventSchema } from "./schemas/match-event.schema";
+import { DRSReview, DRSReviewSchema } from "./schemas/drs-review.schema";
+import { TeamsModule } from "../teams/teams.module";
+import { PlayersModule } from "../players/players.module";
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: Match.name, schema: MatchSchema },
+      { name: Innings.name, schema: InningsSchema },
+      { name: Ball.name, schema: BallSchema },
+      { name: PlayerMatchStats.name, schema: PlayerMatchStatsSchema },
+      { name: Partnership.name, schema: PartnershipSchema },
+      { name: MatchEvent.name, schema: MatchEventSchema },
+      { name: DRSReview.name, schema: DRSReviewSchema },
+    ]),
+    TeamsModule,
+    PlayersModule,
+  ],
+  controllers: [MatchesController],
+  providers: [MatchesService],
+  exports: [MatchesService],
+})
+export class MatchesModule {}

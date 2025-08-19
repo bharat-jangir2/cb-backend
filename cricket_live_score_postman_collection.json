@@ -1,0 +1,1063 @@
+{
+  "info": {
+    "name": "Cricket Live Score API",
+    "description": "Complete API collection for Cricket Live Score platform with admin dashboard endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"your_refresh_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"viewer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"scorer\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "user_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Username Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/check-username/:username",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "check-username", ":username"],
+              "variable": [
+                {
+                  "key": "username",
+                  "value": "testuser"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Email Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/check-email/:email",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "check-email", ":email"],
+              "variable": [
+                {
+                  "key": "email",
+                  "value": "test@example.com"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Match Management",
+      "item": [
+        {
+          "name": "Get All Matches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matches?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Live Matches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matches/live",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", "live"]
+            }
+          }
+        },
+        {
+          "name": "Get Match by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matches/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "match_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Match",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"team1Id\": \"team1_id\",\n  \"team2Id\": \"team2_id\",\n  \"venue\": \"Wankhede Stadium\",\n  \"startTime\": \"2024-01-15T14:00:00Z\",\n  \"format\": \"T20\",\n  \"description\": \"IPL Match\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/matches",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches"]
+            }
+          }
+        },
+        {
+          "name": "Update Match",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"venue\": \"Updated Stadium\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/matches/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "match_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Match Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"live\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/matches/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "match_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Match",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matches/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "match_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Match State",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/matches/:id/state",
+              "host": ["{{baseUrl}}"],
+              "path": ["matches", ":id", "state"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "match_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Team Management",
+      "item": [
+        {
+          "name": "Get All Teams",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/teams?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["teams"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Team by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/teams/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["teams", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "team_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Team",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mumbai Indians\",\n  \"shortName\": \"MI\",\n  \"country\": \"India\",\n  \"logo\": \"https://example.com/logo.png\",\n  \"description\": \"Mumbai Indians cricket team\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/teams",
+              "host": ["{{baseUrl}}"],
+              "path": ["teams"]
+            }
+          }
+        },
+        {
+          "name": "Update Team",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Team Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/teams/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["teams", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "team_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Team",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/teams/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["teams", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "team_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Player Management",
+      "item": [
+        {
+          "name": "Get All Players",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/players?page=1&limit=10&teamId=123&role=batsman",
+              "host": ["{{baseUrl}}"],
+              "path": ["players"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "teamId",
+                  "value": "123"
+                },
+                {
+                  "key": "role",
+                  "value": "batsman"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Player by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/players/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["players", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "player_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Player",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rohit Sharma\",\n  \"teamId\": \"team_id_here\",\n  \"role\": \"batsman\",\n  \"battingStyle\": \"Right-handed\",\n  \"bowlingStyle\": \"Right-arm off-break\",\n  \"dateOfBirth\": \"1987-04-30\",\n  \"nationality\": \"India\",\n  \"photo\": \"https://example.com/photo.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/players",
+              "host": ["{{baseUrl}}"],
+              "path": ["players"]
+            }
+          }
+        },
+        {
+          "name": "Update Player",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Player Name\",\n  \"role\": \"all-rounder\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/players/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["players", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "player_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Player",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/players/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["players", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "player_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ball-by-Ball Scoring",
+      "item": [
+        {
+          "name": "Apply Ball",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matchId\": \"match_id_here\",\n  \"over\": 1,\n  \"ball\": 1,\n  \"innings\": 1,\n  \"runs\": 4,\n  \"extras\": 0,\n  \"extraType\": null,\n  \"wicket\": false,\n  \"wicketType\": null,\n  \"dismissedPlayer\": null,\n  \"newBatsman\": null,\n  \"commentary\": \"Four runs scored\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/balls",
+              "host": ["{{baseUrl}}"],
+              "path": ["balls"]
+            }
+          }
+        },
+        {
+          "name": "Get Balls for Match",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/balls/match/:matchId?over=1&innings=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["balls", "match", ":matchId"],
+              "query": [
+                {
+                  "key": "over",
+                  "value": "1"
+                },
+                {
+                  "key": "innings",
+                  "value": "1"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "matchId",
+                  "value": "match_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Ball",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"runs\": 6,\n  \"commentary\": \"Updated to six runs\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/balls/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["balls", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ball_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Ball",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/balls/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["balls", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ball_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Undo Last Ball",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/balls/undo/:matchId",
+              "host": ["{{baseUrl}}"],
+              "path": ["balls", "undo", ":matchId"],
+              "variable": [
+                {
+                  "key": "matchId",
+                  "value": "match_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tournament Management",
+      "item": [
+        {
+          "name": "Get All Tournaments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tournaments?page=1&limit=10&status=active&format=T20",
+              "host": ["{{baseUrl}}"],
+              "path": ["tournaments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "format",
+                  "value": "T20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tournament by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tournaments/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["tournaments", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "tournament_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Tournament",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"IPL 2024\",\n  \"format\": \"T20\",\n  \"startDate\": \"2024-03-22T00:00:00Z\",\n  \"endDate\": \"2024-05-26T00:00:00Z\",\n  \"description\": \"Indian Premier League 2024\",\n  \"prizePool\": 10000000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tournaments",
+              "host": ["{{baseUrl}}"],
+              "path": ["tournaments"]
+            }
+          }
+        },
+        {
+          "name": "Get Tournament Points Table",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tournaments/:id/points",
+              "host": ["{{baseUrl}}"],
+              "path": ["tournaments", ":id", "points"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "tournament_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tournament Results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tournaments/:id/results",
+              "host": ["{{baseUrl}}"],
+              "path": ["tournaments", ":id", "results"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "tournament_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "News Management",
+      "item": [
+        {
+          "name": "Get All News (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/news?page=1&limit=10&category=breaking&search=worldcup",
+              "host": ["{{baseUrl}}"],
+              "path": ["news"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "category",
+                  "value": "breaking"
+                },
+                {
+                  "key": "search",
+                  "value": "worldcup"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All News (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/news/admin/all?page=1&limit=10&isPublished=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["news", "admin", "all"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "isPublished",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create News",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Breaking News Title\",\n  \"content\": \"News content here...\",\n  \"category\": \"breaking\",\n  \"author\": \"Admin User\",\n  \"tags\": [\"cricket\", \"ipl\"],\n  \"isPublished\": true,\n  \"isFeatured\": false,\n  \"imageUrl\": \"https://example.com/image.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/news",
+              "host": ["{{baseUrl}}"],
+              "path": ["news"]
+            }
+          }
+        },
+        {
+          "name": "Update News",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated News Title\",\n  \"isPublished\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/news/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["news", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "news_id_here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete News",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/news/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["news", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "news_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System Health",
+      "item": [
+        {
+          "name": "Get Scraper Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/scrapers/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["scrapers", "health"]
+            }
+          }
+        },
+        {
+          "name": "Get Scraper Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/scrapers/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["scrapers", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Scraper Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/scrapers/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["scrapers", "metrics"]
+            }
+          }
+        },
+        {
+          "name": "Get Available Sources",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/scrapers/sources",
+              "host": ["{{baseUrl}}"],
+              "path": ["scrapers", "sources"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+} 

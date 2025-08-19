@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: cricket-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: cricket_live_score
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - cricket-network
+
+  backend:
+    build: .
+    container_name: cricket-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/cricket_live_score?authSource=admin
+      - MONGODB_DB_NAME=cricket_live_score
+      - JWT_SECRET=your-super-secret-jwt-key-here
+      - JWT_EXPIRES_IN=24h
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - PORT=3000
+      - AI_AGENT_ENABLED=true
+      - AI_AGENT_UPDATE_INTERVAL=5000
+    depends_on:
+      - mongodb
+    networks:
+      - cricket-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+  # Optional: Redis for caching (future enhancement)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: cricket-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - cricket-network
+
+volumes:
+  mongodb_data:
+
+
+networks:
+  cricket-network:
+    driver: bridge

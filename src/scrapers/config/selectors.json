@@ -1,0 +1,139 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-15T10:00:00Z",
+  "sources": {
+    "espn": {
+      "name": "ESPNcricinfo",
+      "baseUrl": "https://www.espncricinfo.com",
+      "selectors": {
+        "matchInfo": ".match-info",
+        "team1Name": ".team-1 .team-name, .team-1 h3, .team-1 .name",
+        "team2Name": ".team-2 .team-name, .team-2 h3, .team-2 .name",
+        "team1Score": ".team-1 .score, .team-1 .runs, .team-1 [data-testid='score']",
+        "team2Score": ".team-2 .score, .team-2 .runs, .team-2 [data-testid='score']",
+        "team1Wickets": ".team-1 .wickets, .team-1 .wicket-count, .team-1 [data-testid='wickets']",
+        "team2Wickets": ".team-2 .wickets, .team-2 .wicket-count, .team-2 [data-testid='wickets']",
+        "team1Overs": ".team-1 .overs, .team-1 .over-count, .team-1 [data-testid='overs']",
+        "team2Overs": ".team-2 .overs, .team-2 .over-count, .team-2 [data-testid='overs']",
+        "currentOver": ".current-over",
+        "commentary": ".commentary-item, .commentary-text, .ball-commentary"
+      },
+      "fallbackSelectors": {
+        "team1Name": [".team1", ".batting-team", "[data-team='1']"],
+        "team2Name": [".team2", ".bowling-team", "[data-team='2']"],
+        "team1Score": [".score-team1", ".runs-team1", "[data-score='team1']"],
+        "team2Score": [".score-team2", ".runs-team2", "[data-score='team2']"]
+      }
+    },
+    "cricbuzz": {
+      "name": "Cricbuzz",
+      "baseUrl": "https://www.cricbuzz.com",
+      "selectors": {
+        "matchInfo": ".match-header",
+        "team1Name": ".team-1 .team-name, .team-1 h3, .team-1 .name",
+        "team2Name": ".team-2 .team-name, .team-2 h3, .team-2 .name",
+        "team1Score": ".team-1 .score, .team-1 .runs, .team-1 [data-testid='score']",
+        "team2Score": ".team-2 .score, .team-2 .runs, .team-2 [data-testid='score']",
+        "team1Wickets": ".team-1 .wickets, .team-1 .wicket-count, .team-1 [data-testid='wickets']",
+        "team2Wickets": ".team-2 .wickets, .team-2 .wicket-count, .team-2 [data-testid='wickets']",
+        "team1Overs": ".team-1 .overs, .team-1 .over-count, .team-1 [data-testid='overs']",
+        "team2Overs": ".team-2 .overs, .team-2 .over-count, .team-2 [data-testid='overs']",
+        "currentOver": ".current-over",
+        "commentary": ".commentary-item, .commentary-text, .ball-commentary"
+      },
+      "fallbackSelectors": {
+        "team1Name": [".team1", ".batting-team", "[data-team='1']"],
+        "team2Name": [".team2", ".bowling-team", "[data-team='2']"],
+        "team1Score": [".score-team1", ".runs-team1", "[data-score='team1']"],
+        "team2Score": [".score-team2", ".runs-team2", "[data-score='team2']"]
+      }
+    },
+    "flashscore": {
+      "name": "Flashscore",
+      "baseUrl": "https://www.flashscore.com",
+      "selectors": {
+        "matchInfo": ".match-header",
+        "team1Name": ".team-1 .team-name, .team-1 h3, .team-1 .name",
+        "team2Name": ".team-2 .team-name, .team-2 h3, .team-2 .name",
+        "team1Score": ".team-1 .score, .team-1 .runs, .team-1 [data-testid='score']",
+        "team2Score": ".team-2 .score, .team-2 .runs, .team-2 [data-testid='score']",
+        "team1Wickets": ".team-1 .wickets, .team-1 .wicket-count, .team-1 [data-testid='wickets']",
+        "team2Wickets": ".team-2 .wickets, .team-2 .wicket-count, .team-2 [data-testid='wickets']",
+        "team1Overs": ".team-1 .overs, .team-1 .over-count, .team-1 [data-testid='overs']",
+        "team2Overs": ".team-2 .overs, .team-2 .over-count, .team-2 [data-testid='overs']",
+        "currentOver": ".current-over",
+        "commentary": ".commentary-item, .commentary-text, .ball-commentary"
+      },
+      "fallbackSelectors": {
+        "team1Name": [".team1", ".batting-team", "[data-team='1']"],
+        "team2Name": [".team2", ".bowling-team", "[data-team='2']"],
+        "team1Score": [".score-team1", ".runs-team1", "[data-score='team1']"],
+        "team2Score": [".score-team2", ".runs-team2", "[data-score='team2']"]
+      }
+    },
+    "crex": {
+      "name": "Crex.live",
+      "baseUrl": "https://crex.live",
+      "selectors": {
+        "matchInfo": ".match-details, .match-info, .game-header",
+        "team1Name": ".team1-name, .batting-team .name, .team-1 .team-name",
+        "team2Name": ".team2-name, .bowling-team .name, .team-2 .team-name",
+        "team1Score": ".team1-score, .batting-team .score, .team-1 .score",
+        "team2Score": ".team2-score, .bowling-team .score, .team-2 .score",
+        "team1Wickets": ".team1-wickets, .batting-team .wickets, .team-1 .wickets",
+        "team2Wickets": ".team2-wickets, .bowling-team .wickets, .team-2 .wickets",
+        "team1Overs": ".team1-overs, .batting-team .overs, .team-1 .overs",
+        "team2Overs": ".team2-overs, .bowling-team .overs, .team-2 .overs",
+        "currentOver": ".current-over, .live-over, .over-progress",
+        "commentary": ".commentary, .live-commentary, .ball-by-ball"
+      },
+      "fallbackSelectors": {
+        "team1Name": [".team1", ".batting", "[data-team='1']", ".left-team"],
+        "team2Name": [".team2", ".bowling", "[data-team='2']", ".right-team"],
+        "team1Score": [".score1", ".batting-score", "[data-score='1']"],
+        "team2Score": [".score2", ".bowling-score", "[data-score='2']"],
+        "team1Wickets": [".wickets1", ".batting-wickets", "[data-wickets='1']"],
+        "team2Wickets": [".wickets2", ".bowling-wickets", "[data-wickets='2']"],
+        "team1Overs": [".overs1", ".batting-overs", "[data-overs='1']"],
+        "team2Overs": [".overs2", ".bowling-overs", "[data-overs='2']"]
+      }
+    }
+  },
+  "globalFallbacks": {
+    "teamName": [
+      "[class*='team'] [class*='name']",
+      "[class*='team'] h3",
+      "[class*='team'] .title",
+      "[data-team] [class*='name']"
+    ],
+    "score": [
+      "[class*='score']",
+      "[class*='runs']",
+      "[data-score]",
+      "[class*='total']"
+    ],
+    "wickets": [
+      "[class*='wicket']",
+      "[class*='out']",
+      "[data-wickets]",
+      "[class*='fall']"
+    ],
+    "overs": [
+      "[class*='over']",
+      "[class*='ball']",
+      "[data-overs]",
+      "[class*='progress']"
+    ]
+  },
+  "autoDetection": {
+    "enabled": true,
+    "fuzzyMatchThreshold": 0.8,
+    "maxAttempts": 5,
+    "searchPatterns": {
+      "teamName": ["team", "name", "title"],
+      "score": ["score", "runs", "total"],
+      "wickets": ["wicket", "out", "fall"],
+      "overs": ["over", "ball", "progress"]
+    }
+  }
+} 
