@@ -31,17 +31,71 @@ export class PlayersService {
   async findAll(
     paginationQuery: PaginationQueryDto
   ): Promise<PaginationResponseDto<Player>> {
-    const { page = 1, limit = 10 } = paginationQuery;
+    const { 
+      page = 1, 
+      limit = 10, 
+      sortBy = 'fullName', 
+      sortOrder = 'asc', 
+      search,
+      nationality,
+      role,
+      status,
+      battingStyle,
+      bowlingStyle
+    } = paginationQuery;
     const skip = (page - 1) * limit;
+
+    // Build query filter
+    const filter: any = { isActive: true };
+    
+    // Add search functionality
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      filter.$or = [
+        { fullName: searchRegex },
+        { shortName: searchRegex },
+        { nationality: searchRegex },
+        { role: searchRegex },
+        { battingStyle: searchRegex },
+        { bowlingStyle: searchRegex }
+      ];
+    }
+
+    // Add filter functionality
+    if (nationality && nationality.trim()) {
+      filter.nationality = new RegExp(nationality.trim(), 'i');
+    }
+
+    if (role && role.trim()) {
+      filter.role = new RegExp(role.trim(), 'i');
+    }
+
+    if (status && status.trim()) {
+      filter.status = new RegExp(status.trim(), 'i');
+    }
+
+    if (battingStyle && battingStyle.trim()) {
+      filter.battingStyle = new RegExp(battingStyle.trim(), 'i');
+    }
+
+    if (bowlingStyle && bowlingStyle.trim()) {
+      filter.bowlingStyle = new RegExp(bowlingStyle.trim(), 'i');
+    }
+
+    // Build sort object
+    const sortObject: any = {};
+    if (sortBy) {
+      sortObject[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    }
 
     const [players, total] = await Promise.all([
       this.playerModel
-        .find({ isActive: true })
+        .find(filter)
         .skip(skip)
         .limit(limit)
-        .sort({ fullName: 1 })
+        .sort(sortObject)
         .exec(),
-      this.playerModel.countDocuments({ isActive: true }),
+      this.playerModel.countDocuments(filter),
     ]);
 
     const totalPages = Math.ceil(total / limit);
