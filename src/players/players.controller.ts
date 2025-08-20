@@ -82,6 +82,17 @@ export class PlayersController {
     return this.playersService.findByNationality(nationality);
   }
 
+  @Get("team/:teamId")
+  @ApiOperation({ summary: "Get players by team ID" })
+  @ApiParam({ name: "teamId", description: "Team ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Players retrieved successfully",
+  })
+  findByTeam(@Param("teamId") teamId: string) {
+    return this.playersService.findByTeam(teamId);
+  }
+
   @Get(":id")
   @ApiOperation({ summary: "Get player by ID" })
   @ApiParam({ name: "id", description: "Player ID" })

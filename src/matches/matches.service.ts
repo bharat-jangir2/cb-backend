@@ -16,6 +16,7 @@ import {
 import { Partnership, PartnershipDocument } from "./schemas/partnership.schema";
 import { MatchEvent, MatchEventDocument } from "./schemas/match-event.schema";
 import { DRSReview, DRSReviewDocument } from "./schemas/drs-review.schema";
+import { Player, PlayerDocument } from "../players/schemas/player.schema";
 import { CreateMatchDto } from "./dto/create-match.dto";
 import { UpdateMatchDto } from "./dto/update-match.dto";
 import { UpdateMatchStatusDto } from "./dto/match-status.dto";
@@ -48,7 +49,8 @@ export class MatchesService {
     @InjectModel(MatchEvent.name)
     private matchEventModel: Model<MatchEventDocument>,
     @InjectModel(DRSReview.name)
-    private drsReviewModel: Model<DRSReviewDocument>
+    private drsReviewModel: Model<DRSReviewDocument>,
+    @InjectModel(Player.name) private playerModel: Model<PlayerDocument>
   ) {}
 
   async create(createMatchDto: CreateMatchDto): Promise<Match> {
@@ -559,6 +561,30 @@ export class MatchesService {
   async updateSquad(matchId: string, squadData: any): Promise<Match> {
     const updateData: any = {};
 
+    // Validate that all player IDs exist
+    const allPlayerIds = [
+      ...(squadData.teamA || []),
+      ...(squadData.teamB || []),
+    ];
+
+    if (allPlayerIds.length > 0) {
+      const existingPlayers = await this.playerModel
+        .find({ _id: { $in: allPlayerIds } })
+        .select("_id fullName")
+        .exec();
+
+      const existingPlayerIds = existingPlayers.map((p) => p._id.toString());
+      const invalidPlayerIds = allPlayerIds.filter(
+        (id) => !existingPlayerIds.includes(id)
+      );
+
+      if (invalidPlayerIds.length > 0) {
+        throw new BadRequestException(
+          `Invalid player IDs: ${invalidPlayerIds.join(", ")}`
+        );
+      }
+    }
+
     if (squadData.teamA) {
       updateData["squads.teamA"] = squadData.teamA.map(
         (playerId: string) => new Types.ObjectId(playerId)
@@ -583,21 +609,358 @@ export class MatchesService {
   }
 
   async updatePlayingXI(matchId: string, playingXIData: any): Promise<Match> {
+    const match = await this.findById(matchId);
     const updateData: any = {};
 
+    // Validate team A
     if (playingXIData.teamA) {
-      updateData["playingXI.teamA"] = playingXIData.teamA.map(
+      const teamAData = playingXIData.teamA;
+
+      // Validate players count
+      if (teamAData.players.length !== 11) {
+        throw new BadRequestException("Team A must have exactly 11 players");
+      }
+
+      // Validate all players are from the squad
+      const squadPlayerIds =
+        match.squads?.teamA?.map((id) => id.toString()) || [];
+      const invalidPlayers = teamAData.players.filter(
+        (id) => !squadPlayerIds.includes(id)
+      );
+      if (invalidPlayers.length > 0) {
+        throw new BadRequestException(
+          `Team A players not in squad: ${invalidPlayers.join(", ")}`
+        );
+      }
+
+      // Validate captain is in players list
+      if (!teamAData.players.includes(teamAData.captain)) {
+        throw new BadRequestException(
+          "Team A captain must be in the playing XI"
+        );
+      }
+
+      // Validate vice-captain is in players list
+      if (!teamAData.players.includes(teamAData.viceCaptain)) {
+        throw new BadRequestException(
+          "Team A vice-captain must be in the playing XI"
+        );
+      }
+
+      // Validate wicket-keeper is in players list
+      if (!teamAData.players.includes(teamAData.wicketKeeper)) {
+        throw new BadRequestException(
+          "Team A wicket-keeper must be in the playing XI"
+        );
+      }
+
+      // Validate batting order contains all 11 players
+      if (teamAData.battingOrder.length !== 11) {
+        throw new BadRequestException(
+          "Team A batting order must have exactly 11 players"
+        );
+      }
+
+      const battingOrderSet = new Set(teamAData.battingOrder);
+      const playersSet = new Set(teamAData.players);
+      if (
+        battingOrderSet.size !== playersSet.size ||
+        ![...battingOrderSet].every((id) => playersSet.has(id))
+      ) {
+        throw new BadRequestException(
+          "Team A batting order must contain all 11 players exactly once"
+        );
+      }
+
+      updateData["playingXI.teamA.players"] = teamAData.players.map(
         (playerId: string) => new Types.ObjectId(playerId)
       );
-    }
-    if (playingXIData.teamB) {
-      updateData["playingXI.teamB"] = playingXIData.teamB.map(
+      updateData["playingXI.teamA.captain"] = new Types.ObjectId(
+        teamAData.captain
+      );
+      updateData["playingXI.teamA.viceCaptain"] = new Types.ObjectId(
+        teamAData.viceCaptain
+      );
+      updateData["playingXI.teamA.battingOrder"] = teamAData.battingOrder.map(
         (playerId: string) => new Types.ObjectId(playerId)
+      );
+      updateData["playingXI.teamA.wicketKeeper"] = new Types.ObjectId(
+        teamAData.wicketKeeper
+      );
+    }
+
+    // Validate team B
+    if (playingXIData.teamB) {
+      const teamBData = playingXIData.teamB;
+
+      // Validate players count
+      if (teamBData.players.length !== 11) {
+        throw new BadRequestException("Team B must have exactly 11 players");
+      }
+
+      // Validate all players are from the squad
+      const squadPlayerIds =
+        match.squads?.teamB?.map((id) => id.toString()) || [];
+      const invalidPlayers = teamBData.players.filter(
+        (id) => !squadPlayerIds.includes(id)
+      );
+      if (invalidPlayers.length > 0) {
+        throw new BadRequestException(
+          `Team B players not in squad: ${invalidPlayers.join(", ")}`
+        );
+      }
+
+      // Validate captain is in players list
+      if (!teamBData.players.includes(teamBData.captain)) {
+        throw new BadRequestException(
+          "Team B captain must be in the playing XI"
+        );
+      }
+
+      // Validate vice-captain is in players list
+      if (!teamBData.players.includes(teamBData.viceCaptain)) {
+        throw new BadRequestException(
+          "Team B vice-captain must be in the playing XI"
+        );
+      }
+
+      // Validate wicket-keeper is in players list
+      if (!teamBData.players.includes(teamBData.wicketKeeper)) {
+        throw new BadRequestException(
+          "Team B wicket-keeper must be in the playing XI"
+        );
+      }
+
+      // Validate batting order contains all 11 players
+      if (teamBData.battingOrder.length !== 11) {
+        throw new BadRequestException(
+          "Team B batting order must have exactly 11 players"
+        );
+      }
+
+      const battingOrderSet = new Set(teamBData.battingOrder);
+      const playersSet = new Set(teamBData.players);
+      if (
+        battingOrderSet.size !== playersSet.size ||
+        ![...battingOrderSet].every((id) => playersSet.has(id))
+      ) {
+        throw new BadRequestException(
+          "Team B batting order must contain all 11 players exactly once"
+        );
+      }
+
+      updateData["playingXI.teamB.players"] = teamBData.players.map(
+        (playerId: string) => new Types.ObjectId(playerId)
+      );
+      updateData["playingXI.teamB.captain"] = new Types.ObjectId(
+        teamBData.captain
+      );
+      updateData["playingXI.teamB.viceCaptain"] = new Types.ObjectId(
+        teamBData.viceCaptain
+      );
+      updateData["playingXI.teamB.battingOrder"] = teamBData.battingOrder.map(
+        (playerId: string) => new Types.ObjectId(playerId)
+      );
+      updateData["playingXI.teamB.wicketKeeper"] = new Types.ObjectId(
+        teamBData.wicketKeeper
       );
     }
 
     const updatedMatch = await this.matchModel
       .findByIdAndUpdate(matchId, updateData, { new: true })
+      .populate("teamAId", "name shortName")
+      .populate("teamBId", "name shortName");
+
+    if (!updatedMatch) {
+      throw new NotFoundException("Match not found");
+    }
+
+    return updatedMatch;
+  }
+
+  async updateCaptain(matchId: string, updateData: any): Promise<Match> {
+    const match = await this.findById(matchId);
+    const teamKey = updateData.team === "A" ? "teamA" : "teamB";
+
+    // Validate captain is in the squad
+    const squadPlayerIds =
+      match.squads?.[teamKey]?.map((id) => id.toString()) || [];
+    if (!squadPlayerIds.includes(updateData.captainId)) {
+      throw new BadRequestException("Captain must be selected from the squad");
+    }
+
+    // Validate captain is in the current Playing XI
+    const playingXIPlayerIds =
+      match.playingXI?.[teamKey]?.players?.map((id) => id.toString()) || [];
+    if (!playingXIPlayerIds.includes(updateData.captainId)) {
+      throw new BadRequestException(
+        "Captain must be in the current Playing XI"
+      );
+    }
+
+    const updateField = `playingXI.${teamKey}.captain`;
+
+    const updatedMatch = await this.matchModel
+      .findByIdAndUpdate(
+        matchId,
+        { [updateField]: new Types.ObjectId(updateData.captainId) },
+        { new: true }
+      )
+      .populate("teamAId", "name shortName")
+      .populate("teamBId", "name shortName");
+
+    if (!updatedMatch) {
+      throw new NotFoundException("Match not found");
+    }
+
+    return updatedMatch;
+  }
+
+  async updateViceCaptain(matchId: string, updateData: any): Promise<Match> {
+    const match = await this.findById(matchId);
+    const teamKey = updateData.team === "A" ? "teamA" : "teamB";
+
+    // Validate vice-captain is in the squad
+    const squadPlayerIds =
+      match.squads?.[teamKey]?.map((id) => id.toString()) || [];
+    if (!squadPlayerIds.includes(updateData.viceCaptainId)) {
+      throw new BadRequestException(
+        "Vice-captain must be selected from the squad"
+      );
+    }
+
+    // Validate vice-captain is in the current Playing XI
+    const playingXIPlayerIds =
+      match.playingXI?.[teamKey]?.players?.map((id) => id.toString()) || [];
+    if (!playingXIPlayerIds.includes(updateData.viceCaptainId)) {
+      throw new BadRequestException(
+        "Vice-captain must be in the current Playing XI"
+      );
+    }
+
+    // Validate vice-captain is not the same as captain
+    const currentCaptain = match.playingXI?.[teamKey]?.captain?.toString();
+    if (currentCaptain === updateData.viceCaptainId) {
+      throw new BadRequestException(
+        "Vice-captain cannot be the same as captain"
+      );
+    }
+
+    const updateField = `playingXI.${teamKey}.viceCaptain`;
+
+    const updatedMatch = await this.matchModel
+      .findByIdAndUpdate(
+        matchId,
+        { [updateField]: new Types.ObjectId(updateData.viceCaptainId) },
+        { new: true }
+      )
+      .populate("teamAId", "name shortName")
+      .populate("teamBId", "name shortName");
+
+    if (!updatedMatch) {
+      throw new NotFoundException("Match not found");
+    }
+
+    return updatedMatch;
+  }
+
+  async updateBattingOrder(matchId: string, updateData: any): Promise<Match> {
+    const match = await this.findById(matchId);
+    const teamKey = updateData.team === "A" ? "teamA" : "teamB";
+
+    // Validate batting order has exactly 11 players
+    if (updateData.battingOrder.length !== 11) {
+      throw new BadRequestException(
+        "Batting order must have exactly 11 players"
+      );
+    }
+
+    // Validate all players are in the squad
+    const squadPlayerIds =
+      match.squads?.[teamKey]?.map((id) => id.toString()) || [];
+    const invalidPlayers = updateData.battingOrder.filter(
+      (id) => !squadPlayerIds.includes(id)
+    );
+    if (invalidPlayers.length > 0) {
+      throw new BadRequestException(
+        `Batting order players not in squad: ${invalidPlayers.join(", ")}`
+      );
+    }
+
+    // Validate all players are in the current Playing XI
+    const playingXIPlayerIds =
+      match.playingXI?.[teamKey]?.players?.map((id) => id.toString()) || [];
+    const invalidPlayingXIPlayers = updateData.battingOrder.filter(
+      (id) => !playingXIPlayerIds.includes(id)
+    );
+    if (invalidPlayingXIPlayers.length > 0) {
+      throw new BadRequestException(
+        `Batting order players not in Playing XI: ${invalidPlayingXIPlayers.join(
+          ", "
+        )}`
+      );
+    }
+
+    // Validate no duplicate players in batting order
+    const battingOrderSet = new Set(updateData.battingOrder);
+    if (battingOrderSet.size !== 11) {
+      throw new BadRequestException(
+        "Batting order must contain exactly 11 unique players"
+      );
+    }
+
+    const updateField = `playingXI.${teamKey}.battingOrder`;
+
+    const battingOrder = updateData.battingOrder.map(
+      (playerId: string) => new Types.ObjectId(playerId)
+    );
+
+    const updatedMatch = await this.matchModel
+      .findByIdAndUpdate(
+        matchId,
+        { [updateField]: battingOrder },
+        { new: true }
+      )
+      .populate("teamAId", "name shortName")
+      .populate("teamBId", "name shortName");
+
+    if (!updatedMatch) {
+      throw new NotFoundException("Match not found");
+    }
+
+    return updatedMatch;
+  }
+
+  async updateWicketKeeper(matchId: string, updateData: any): Promise<Match> {
+    const match = await this.findById(matchId);
+    const teamKey = updateData.team === "A" ? "teamA" : "teamB";
+
+    // Validate wicket-keeper is in the squad
+    const squadPlayerIds =
+      match.squads?.[teamKey]?.map((id) => id.toString()) || [];
+    if (!squadPlayerIds.includes(updateData.wicketKeeperId)) {
+      throw new BadRequestException(
+        "Wicket-keeper must be selected from the squad"
+      );
+    }
+
+    // Validate wicket-keeper is in the current Playing XI
+    const playingXIPlayerIds =
+      match.playingXI?.[teamKey]?.players?.map((id) => id.toString()) || [];
+    if (!playingXIPlayerIds.includes(updateData.wicketKeeperId)) {
+      throw new BadRequestException(
+        "Wicket-keeper must be in the current Playing XI"
+      );
+    }
+
+    const updateField = `playingXI.${teamKey}.wicketKeeper`;
+
+    const updatedMatch = await this.matchModel
+      .findByIdAndUpdate(
+        matchId,
+        { [updateField]: new Types.ObjectId(updateData.wicketKeeperId) },
+        { new: true }
+      )
       .populate("teamAId", "name shortName")
       .populate("teamBId", "name shortName");
 
@@ -667,12 +1030,199 @@ export class MatchesService {
 
   async getSquad(matchId: string): Promise<any> {
     const match = await this.findById(matchId);
-    return match.squads;
+
+    // Populate player details for both teams
+    const populatedSquad = {
+      teamA: [],
+      teamB: [],
+    };
+
+    if (match.squads?.teamA?.length > 0) {
+      const teamAPlayers = await this.playerModel
+        .find({ _id: { $in: match.squads.teamA } })
+        .select(
+          "_id fullName shortName role nationality battingStyle bowlingStyle photoUrl"
+        )
+        .exec();
+      populatedSquad.teamA = teamAPlayers;
+    }
+
+    if (match.squads?.teamB?.length > 0) {
+      const teamBPlayers = await this.playerModel
+        .find({ _id: { $in: match.squads.teamB } })
+        .select(
+          "_id fullName shortName role nationality battingStyle bowlingStyle photoUrl"
+        )
+        .exec();
+      populatedSquad.teamB = teamBPlayers;
+    }
+
+    return populatedSquad;
+  }
+
+  async getSquadForTeam(matchId: string, team: "A" | "B"): Promise<any> {
+    const match = await this.findById(matchId);
+    const teamKey = team === "A" ? "teamA" : "teamB";
+
+    if (match.squads?.[teamKey]?.length > 0) {
+      const players = await this.playerModel
+        .find({ _id: { $in: match.squads[teamKey] } })
+        .select(
+          "_id fullName shortName role nationality battingStyle bowlingStyle photoUrl"
+        )
+        .exec();
+      return players;
+    }
+
+    return [];
+  }
+
+  async getAvailablePlayersForTeam(
+    matchId: string,
+    team: "A" | "B"
+  ): Promise<any> {
+    const match = await this.findById(matchId);
+    const teamKey = team === "A" ? "teamA" : "teamB";
+
+    // Get squad players
+    const squadPlayers = await this.getSquadForTeam(matchId, team);
+
+    // Get current Playing XI players
+    const playingXIPlayers = match.playingXI?.[teamKey]?.players || [];
+    const playingXIPlayerIds = playingXIPlayers.map((id) => id.toString());
+
+    // Return squad players with availability status
+    return squadPlayers.map((player) => ({
+      ...player.toObject(),
+      isInPlayingXI: playingXIPlayerIds.includes(player._id.toString()),
+      canBeCaptain: true, // All players can be captain
+      canBeViceCaptain: true, // All players can be vice-captain
+      canBeWicketKeeper: true, // Any player can be wicket-keeper
+      canBat: true, // All players can bat
+    }));
   }
 
   async getPlayingXI(matchId: string): Promise<any> {
     const match = await this.findById(matchId);
-    return match.playingXI;
+
+    // Populate player details for both teams
+    const populatedPlayingXI = {
+      teamA: {
+        players: [],
+        captain: null,
+        viceCaptain: null,
+        battingOrder: [],
+        wicketKeeper: null,
+      },
+      teamB: {
+        players: [],
+        captain: null,
+        viceCaptain: null,
+        battingOrder: [],
+        wicketKeeper: null,
+      },
+    };
+
+    if (match.playingXI?.teamA?.players?.length > 0) {
+      const teamAPlayers = await this.playerModel
+        .find({ _id: { $in: match.playingXI.teamA.players } })
+        .select(
+          "_id fullName shortName role nationality battingStyle bowlingStyle photoUrl"
+        )
+        .exec();
+      populatedPlayingXI.teamA.players = teamAPlayers;
+    }
+
+    if (match.playingXI?.teamA?.captain) {
+      const captain = await this.playerModel
+        .findById(match.playingXI.teamA.captain)
+        .select("_id fullName shortName role nationality")
+        .exec();
+      populatedPlayingXI.teamA.captain = captain;
+    }
+
+    if (match.playingXI?.teamA?.viceCaptain) {
+      const viceCaptain = await this.playerModel
+        .findById(match.playingXI.teamA.viceCaptain)
+        .select("_id fullName shortName role nationality")
+        .exec();
+      populatedPlayingXI.teamA.viceCaptain = viceCaptain;
+    }
+
+    if (match.playingXI?.teamA?.battingOrder?.length > 0) {
+      const battingOrder = await this.playerModel
+        .find({ _id: { $in: match.playingXI.teamA.battingOrder } })
+        .select("_id fullName shortName role nationality")
+        .exec();
+
+      // Maintain the original batting order sequence
+      const battingOrderMap = new Map(
+        battingOrder.map((p) => [p._id.toString(), p])
+      );
+      populatedPlayingXI.teamA.battingOrder = match.playingXI.teamA.battingOrder
+        .map((id) => battingOrderMap.get(id.toString()))
+        .filter(Boolean);
+    }
+
+    if (match.playingXI?.teamA?.wicketKeeper) {
+      const wicketKeeper = await this.playerModel
+        .findById(match.playingXI.teamA.wicketKeeper)
+        .select("_id fullName shortName role nationality")
+        .exec();
+      populatedPlayingXI.teamA.wicketKeeper = wicketKeeper;
+    }
+
+    // Team B
+    if (match.playingXI?.teamB?.players?.length > 0) {
+      const teamBPlayers = await this.playerModel
+        .find({ _id: { $in: match.playingXI.teamB.players } })
+        .select(
+          "_id fullName shortName role nationality battingStyle bowlingStyle photoUrl"
+        )
+        .exec();
+      populatedPlayingXI.teamB.players = teamBPlayers;
+    }
+
+    if (match.playingXI?.teamB?.captain) {
+      const captain = await this.playerModel
+        .findById(match.playingXI.teamB.captain)
+        .select("_id fullName shortName role nationality")
+        .exec();
+      populatedPlayingXI.teamB.captain = captain;
+    }
+
+    if (match.playingXI?.teamB?.viceCaptain) {
+      const viceCaptain = await this.playerModel
+        .findById(match.playingXI.teamB.viceCaptain)
+        .select("_id fullName shortName role nationality")
+        .exec();
+      populatedPlayingXI.teamB.viceCaptain = viceCaptain;
+    }
+
+    if (match.playingXI?.teamB?.battingOrder?.length > 0) {
+      const battingOrder = await this.playerModel
+        .find({ _id: { $in: match.playingXI.teamB.battingOrder } })
+        .select("_id fullName shortName role nationality")
+        .exec();
+
+      // Maintain the original batting order sequence
+      const battingOrderMap = new Map(
+        battingOrder.map((p) => [p._id.toString(), p])
+      );
+      populatedPlayingXI.teamB.battingOrder = match.playingXI.teamB.battingOrder
+        .map((id) => battingOrderMap.get(id.toString()))
+        .filter(Boolean);
+    }
+
+    if (match.playingXI?.teamB?.wicketKeeper) {
+      const wicketKeeper = await this.playerModel
+        .findById(match.playingXI.teamB.wicketKeeper)
+        .select("_id fullName shortName role nationality")
+        .exec();
+      populatedPlayingXI.teamB.wicketKeeper = wicketKeeper;
+    }
+
+    return populatedPlayingXI;
   }
 
   async getNotifications(matchId: string, type?: string): Promise<any[]> {

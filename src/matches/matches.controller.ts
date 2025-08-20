@@ -8,6 +8,7 @@ import {
   Delete,
   Query,
   UseGuards,
+  BadRequestException,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -31,6 +32,10 @@ import {
   PlayingXIDto,
   UpdateSquadDto,
   UpdatePlayingXIDto,
+  UpdateCaptainDto,
+  UpdateViceCaptainDto,
+  UpdateBattingOrderDto,
+  UpdateWicketKeeperDto,
 } from "./dto/squad.dto";
 import { TossDto, NotificationDto, UpdateTossDto } from "./dto/toss.dto";
 import {
@@ -294,6 +299,42 @@ export class MatchesController {
     return this.matchesService.getSquad(id);
   }
 
+  @Get(":id/squad/team/:team")
+  @ApiOperation({ summary: "Get squad players for specific team" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "team", description: "Team (A or B)" })
+  @ApiResponse({
+    status: 200,
+    description: "Squad players retrieved successfully",
+  })
+  getSquadForTeam(@Param("id") id: string, @Param("team") team: string) {
+    if (team !== "A" && team !== "B") {
+      throw new BadRequestException("Team must be 'A' or 'B'");
+    }
+    return this.matchesService.getSquadForTeam(id, team as "A" | "B");
+  }
+
+  @Get(":id/available-players/:team")
+  @ApiOperation({ summary: "Get available players for team with capabilities" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "team", description: "Team (A or B)" })
+  @ApiResponse({
+    status: 200,
+    description: "Available players retrieved successfully",
+  })
+  getAvailablePlayersForTeam(
+    @Param("id") id: string,
+    @Param("team") team: string
+  ) {
+    if (team !== "A" && team !== "B") {
+      throw new BadRequestException("Team must be 'A' or 'B'");
+    }
+    return this.matchesService.getAvailablePlayersForTeam(
+      id,
+      team as "A" | "B"
+    );
+  }
+
   // Playing XI Management
   @Patch(":id/playing-xi")
   @Roles(UserRole.ADMIN, UserRole.SCORER)
@@ -319,6 +360,70 @@ export class MatchesController {
   })
   getPlayingXI(@Param("id") id: string) {
     return this.matchesService.getPlayingXI(id);
+  }
+
+  // Captain Management
+  @Patch(":id/captain")
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update team captain" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Captain updated successfully",
+  })
+  updateCaptain(
+    @Param("id") id: string,
+    @Body() updateCaptainDto: UpdateCaptainDto
+  ) {
+    return this.matchesService.updateCaptain(id, updateCaptainDto);
+  }
+
+  // Vice-Captain Management
+  @Patch(":id/vice-captain")
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update team vice-captain" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Vice-captain updated successfully",
+  })
+  updateViceCaptain(
+    @Param("id") id: string,
+    @Body() updateViceCaptainDto: UpdateViceCaptainDto
+  ) {
+    return this.matchesService.updateViceCaptain(id, updateViceCaptainDto);
+  }
+
+  // Batting Order Management
+  @Patch(":id/batting-order")
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update team batting order" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Batting order updated successfully",
+  })
+  updateBattingOrder(
+    @Param("id") id: string,
+    @Body() updateBattingOrderDto: UpdateBattingOrderDto
+  ) {
+    return this.matchesService.updateBattingOrder(id, updateBattingOrderDto);
+  }
+
+  // Wicket-Keeper Management
+  @Patch(":id/wicket-keeper")
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update team wicket-keeper" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Wicket-keeper updated successfully",
+  })
+  updateWicketKeeper(
+    @Param("id") id: string,
+    @Body() updateWicketKeeperDto: UpdateWicketKeeperDto
+  ) {
+    return this.matchesService.updateWicketKeeper(id, updateWicketKeeperDto);
   }
 
   // Toss Management

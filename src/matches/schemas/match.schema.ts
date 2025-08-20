@@ -80,16 +80,40 @@ export class Match {
     teamB: Types.ObjectId[];
   };
 
-  // Playing XI
+  // Playing XI with captain, vice-captain, and batting order
   @Prop({
     type: {
-      teamA: [{ type: Types.ObjectId, ref: "Player" }],
-      teamB: [{ type: Types.ObjectId, ref: "Player" }],
+      teamA: {
+        players: [{ type: Types.ObjectId, ref: "Player" }],
+        captain: { type: Types.ObjectId, ref: "Player" },
+        viceCaptain: { type: Types.ObjectId, ref: "Player" },
+        battingOrder: [{ type: Types.ObjectId, ref: "Player" }],
+        wicketKeeper: { type: Types.ObjectId, ref: "Player" },
+      },
+      teamB: {
+        players: [{ type: Types.ObjectId, ref: "Player" }],
+        captain: { type: Types.ObjectId, ref: "Player" },
+        viceCaptain: { type: Types.ObjectId, ref: "Player" },
+        battingOrder: [{ type: Types.ObjectId, ref: "Player" }],
+        wicketKeeper: { type: Types.ObjectId, ref: "Player" },
+      },
     },
   })
   playingXI: {
-    teamA: Types.ObjectId[];
-    teamB: Types.ObjectId[];
+    teamA: {
+      players: Types.ObjectId[];
+      captain: Types.ObjectId;
+      viceCaptain: Types.ObjectId;
+      battingOrder: Types.ObjectId[];
+      wicketKeeper: Types.ObjectId;
+    };
+    teamB: {
+      players: Types.ObjectId[];
+      captain: Types.ObjectId;
+      viceCaptain: Types.ObjectId;
+      battingOrder: Types.ObjectId[];
+      wicketKeeper: Types.ObjectId;
+    };
   };
 
   // Current players on field

@@ -77,6 +77,12 @@ export class PlayersService {
     return this.playerModel.find({ nationality, isActive: true }).exec();
   }
 
+  async findByTeam(teamId: string): Promise<Player[]> {
+    // For now, return all active players since team relationship is not implemented
+    // This can be enhanced when team-player relationship is added to the schema
+    return this.playerModel.find({ isActive: true }).exec();
+  }
+
   async update(id: string, updatePlayerDto: UpdatePlayerDto): Promise<Player> {
     // Check if name already exists for other players
     if (updatePlayerDto.fullName) {

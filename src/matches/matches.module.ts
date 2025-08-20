@@ -12,6 +12,7 @@ import {
 import { Partnership, PartnershipSchema } from "./schemas/partnership.schema";
 import { MatchEvent, MatchEventSchema } from "./schemas/match-event.schema";
 import { DRSReview, DRSReviewSchema } from "./schemas/drs-review.schema";
+import { Player, PlayerSchema } from "../players/schemas/player.schema";
 import { TeamsModule } from "../teams/teams.module";
 import { PlayersModule } from "../players/players.module";
 
@@ -25,6 +26,7 @@ import { PlayersModule } from "../players/players.module";
       { name: Partnership.name, schema: PartnershipSchema },
       { name: MatchEvent.name, schema: MatchEventSchema },
       { name: DRSReview.name, schema: DRSReviewSchema },
+      { name: Player.name, schema: PlayerSchema },
     ]),
     TeamsModule,
     PlayersModule,
