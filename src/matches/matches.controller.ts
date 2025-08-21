@@ -74,12 +74,13 @@ import { PaginationQueryDto } from "../common/dto/pagination.dto";
 
 @ApiTags("matches")
 @Controller("api/matches")
-@UseGuards(JwtAuthGuard, RolesGuard)
-@ApiBearerAuth()
 export class MatchesController {
   constructor(private readonly matchesService: MatchesService) {}
 
+  // ===== PROTECTED ENDPOINTS (require authentication) =====
+
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SCORER)
   @ApiOperation({ summary: "Create a new match" })
   @ApiResponse({
@@ -90,9 +91,12 @@ export class MatchesController {
     status: 400,
     description: "Bad request - Teams must be different",
   })
+  @ApiBearerAuth()
   create(@Body() createMatchDto: CreateMatchDto) {
     return this.matchesService.create(createMatchDto);
   }
+
+  // ===== PUBLIC ENDPOINTS (no authentication required) =====
 
   @Get()
   @ApiOperation({ summary: "Get all matches" })
@@ -161,7 +165,10 @@ export class MatchesController {
     return this.matchesService.getMatchState(id);
   }
 
+  // ===== PROTECTED ENDPOINTS (require authentication) =====
+
   @Patch(":id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SCORER)
   @ApiOperation({ summary: "Update match details" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -174,11 +181,13 @@ export class MatchesController {
     status: 400,
     description: "Bad request - Teams must be different",
   })
+  @ApiBearerAuth()
   update(@Param("id") id: string, @Body() updateMatchDto: UpdateMatchDto) {
     return this.matchesService.update(id, updateMatchDto);
   }
 
   @Patch(":id/status")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SCORER)
   @ApiOperation({ summary: "Update match status" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -191,6 +200,7 @@ export class MatchesController {
     status: 400,
     description: "Bad request - Invalid status transition",
   })
+  @ApiBearerAuth()
   updateStatus(
     @Param("id") id: string,
     @Body() updateStatusDto: UpdateMatchStatusDto
@@ -199,6 +209,7 @@ export class MatchesController {
   }
 
   @Delete(":id")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: "Delete match (Admin only)" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -211,29 +222,14 @@ export class MatchesController {
     status: 403,
     description: "Forbidden - Admin access required",
   })
+  @ApiBearerAuth()
   remove(@Param("id") id: string) {
     return this.matchesService.remove(id);
   }
 
-  // Strike Rotation Management
-  @Patch(":id/strike-rotation")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update strike rotation" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Strike rotation updated successfully",
-  })
-  updateStrikeRotation(
-    @Param("id") id: string,
-    @Body() updateStrikeRotationDto: UpdateStrikeRotationDto
-  ) {
-    return this.matchesService.updateStrikeRotation(
-      id,
-      updateStrikeRotationDto
-    );
-  }
+  // ===== PUBLIC ENDPOINTS (no authentication required) =====
 
+  // Strike Rotation Management - GET is public
   @Get(":id/strike-rotation")
   @ApiOperation({ summary: "Get current strike rotation" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -245,19 +241,7 @@ export class MatchesController {
     return this.matchesService.getStrikeRotation(id);
   }
 
-  // Commentary Management
-  @Post(":id/commentary")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Add match commentary" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 201,
-    description: "Commentary added successfully",
-  })
-  addCommentary(@Param("id") id: string, @Body() commentaryDto: CommentaryDto) {
-    return this.matchesService.addCommentary(id, commentaryDto);
-  }
-
+  // Commentary Management - GET is public
   @Get(":id/commentary")
   @ApiOperation({ summary: "Get match commentary" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -275,19 +259,7 @@ export class MatchesController {
     return this.matchesService.getCommentary(id, over, innings);
   }
 
-  // Squad Management
-  @Patch(":id/squad")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update match squad" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Squad updated successfully",
-  })
-  updateSquad(@Param("id") id: string, @Body() updateSquadDto: UpdateSquadDto) {
-    return this.matchesService.updateSquad(id, updateSquadDto);
-  }
-
+  // Squad Management - GET is public
   @Get(":id/squad")
   @ApiOperation({ summary: "Get match squad" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -299,612 +271,91 @@ export class MatchesController {
     return this.matchesService.getSquad(id);
   }
 
-  @Get(":id/squad/team/:team")
-  @ApiOperation({ summary: "Get squad players for specific team" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiParam({ name: "team", description: "Team (A or B)" })
-  @ApiResponse({
-    status: 200,
-    description: "Squad players retrieved successfully",
-  })
-  getSquadForTeam(@Param("id") id: string, @Param("team") team: string) {
-    if (team !== "A" && team !== "B") {
-      throw new BadRequestException("Team must be 'A' or 'B'");
-    }
-    return this.matchesService.getSquadForTeam(id, team as "A" | "B");
-  }
+  // ===== PROTECTED ENDPOINTS (require authentication) =====
 
-  @Get(":id/available-players/:team")
-  @ApiOperation({ summary: "Get available players for team with capabilities" })
+  // Strike Rotation Management - PATCH is protected
+  @Patch(":id/strike-rotation")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update strike rotation" })
   @ApiParam({ name: "id", description: "Match ID" })
-  @ApiParam({ name: "team", description: "Team (A or B)" })
   @ApiResponse({
     status: 200,
-    description: "Available players retrieved successfully",
+    description: "Strike rotation updated successfully",
   })
-  getAvailablePlayersForTeam(
+  @ApiBearerAuth()
+  updateStrikeRotation(
     @Param("id") id: string,
-    @Param("team") team: string
+    @Body() updateStrikeRotationDto: UpdateStrikeRotationDto
   ) {
-    if (team !== "A" && team !== "B") {
-      throw new BadRequestException("Team must be 'A' or 'B'");
-    }
-    return this.matchesService.getAvailablePlayersForTeam(
+    return this.matchesService.updateStrikeRotation(
       id,
-      team as "A" | "B"
+      updateStrikeRotationDto
     );
   }
 
-  // Playing XI Management
-  @Patch(":id/playing-xi")
+  // Commentary Management - POST is protected
+  @Post(":id/commentary")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update playing XI" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Playing XI updated successfully",
-  })
-  updatePlayingXI(
-    @Param("id") id: string,
-    @Body() updatePlayingXIDto: UpdatePlayingXIDto
-  ) {
-    return this.matchesService.updatePlayingXI(id, updatePlayingXIDto);
-  }
-
-  @Get(":id/playing-xi")
-  @ApiOperation({ summary: "Get playing XI" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Playing XI retrieved successfully",
-  })
-  getPlayingXI(@Param("id") id: string) {
-    return this.matchesService.getPlayingXI(id);
-  }
-
-  // Captain Management
-  @Patch(":id/captain")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update team captain" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Captain updated successfully",
-  })
-  updateCaptain(
-    @Param("id") id: string,
-    @Body() updateCaptainDto: UpdateCaptainDto
-  ) {
-    return this.matchesService.updateCaptain(id, updateCaptainDto);
-  }
-
-  // Vice-Captain Management
-  @Patch(":id/vice-captain")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update team vice-captain" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Vice-captain updated successfully",
-  })
-  updateViceCaptain(
-    @Param("id") id: string,
-    @Body() updateViceCaptainDto: UpdateViceCaptainDto
-  ) {
-    return this.matchesService.updateViceCaptain(id, updateViceCaptainDto);
-  }
-
-  // Batting Order Management
-  @Patch(":id/batting-order")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update team batting order" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Batting order updated successfully",
-  })
-  updateBattingOrder(
-    @Param("id") id: string,
-    @Body() updateBattingOrderDto: UpdateBattingOrderDto
-  ) {
-    return this.matchesService.updateBattingOrder(id, updateBattingOrderDto);
-  }
-
-  // Wicket-Keeper Management
-  @Patch(":id/wicket-keeper")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update team wicket-keeper" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Wicket-keeper updated successfully",
-  })
-  updateWicketKeeper(
-    @Param("id") id: string,
-    @Body() updateWicketKeeperDto: UpdateWicketKeeperDto
-  ) {
-    return this.matchesService.updateWicketKeeper(id, updateWicketKeeperDto);
-  }
-
-  // Toss Management
-  @Patch(":id/toss")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update toss information" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Toss information updated successfully",
-  })
-  updateToss(@Param("id") id: string, @Body() updateTossDto: UpdateTossDto) {
-    return this.matchesService.updateToss(id, updateTossDto);
-  }
-
-  @Get(":id/toss")
-  @ApiOperation({ summary: "Get toss information" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Toss information retrieved successfully",
-  })
-  getTossInfo(@Param("id") id: string) {
-    return this.matchesService.getTossInfo(id);
-  }
-
-  // Notifications Management
-  @Post(":id/notifications")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Add match notification" })
+  @ApiOperation({ summary: "Add match commentary" })
   @ApiParam({ name: "id", description: "Match ID" })
   @ApiResponse({
     status: 201,
-    description: "Notification added successfully",
+    description: "Commentary added successfully",
   })
-  addNotification(
-    @Param("id") id: string,
-    @Body() notificationDto: NotificationDto
-  ) {
-    return this.matchesService.addNotification(id, notificationDto);
+  @ApiBearerAuth()
+  addCommentary(@Param("id") id: string, @Body() commentaryDto: CommentaryDto) {
+    return this.matchesService.addCommentary(id, commentaryDto);
   }
 
-  @Get(":id/notifications")
-  @ApiOperation({ summary: "Get match notifications" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiQuery({ name: "type", required: false, type: String })
-  @ApiResponse({
-    status: 200,
-    description: "Notifications retrieved successfully",
-  })
-  getNotifications(@Param("id") id: string, @Query("type") type?: string) {
-    return this.matchesService.getNotifications(id, type);
-  }
-
-  // WebSocket Connection Management
-  @Patch(":id/websocket-stats")
+  // Squad Management - PATCH is protected
+  @Patch(":id/squad")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update WebSocket connection stats" })
+  @ApiOperation({ summary: "Update match squad" })
   @ApiParam({ name: "id", description: "Match ID" })
   @ApiResponse({
     status: 200,
-    description: "WebSocket stats updated successfully",
+    description: "Squad updated successfully",
   })
-  updateWebSocketStats(
-    @Param("id") id: string,
-    @Body() stats: { totalConnections?: number; activeConnections?: number }
-  ) {
-    return this.matchesService.updateWebSocketStats(id, stats);
+  @ApiBearerAuth()
+  updateSquad(@Param("id") id: string, @Body() updateSquadDto: UpdateSquadDto) {
+    return this.matchesService.updateSquad(id, updateSquadDto);
   }
 
-  @Get(":id/websocket-stats")
-  @ApiOperation({ summary: "Get WebSocket connection stats" })
+  // ===== PUBLIC ENDPOINTS (no authentication required) =====
+
+  // Innings Management - GET is public
+  @Get(":id/innings")
+  @ApiOperation({ summary: "Get all innings for match" })
   @ApiParam({ name: "id", description: "Match ID" })
   @ApiResponse({
     status: 200,
-    description: "WebSocket stats retrieved successfully",
-  })
-  getWebSocketStats(@Param("id") id: string) {
-    return this.matchesService.getWebSocketStats(id);
-  }
-
-  // Power Play Management
-  @Post(":id/power-plays")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Add power play to match" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 201,
-    description: "Power play added successfully",
+    description: "Innings retrieved successfully",
   })
   @ApiResponse({ status: 404, description: "Match not found" })
-  addPowerPlay(
+  getInnings(@Param("id") id: string) {
+    return this.matchesService.getInnings(id);
+  }
+
+  @Get(":id/innings/:inningsNumber")
+  @ApiOperation({ summary: "Get specific innings" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "inningsNumber", description: "Innings number (1 or 2)" })
+  @ApiResponse({
+    status: 200,
+    description: "Innings retrieved successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match or innings not found" })
+  getInningsByNumber(
     @Param("id") id: string,
-    @Body() createPowerPlayDto: CreatePowerPlayDto
+    @Param("inningsNumber") inningsNumber: string
   ) {
-    return this.matchesService.addPowerPlay(id, createPowerPlayDto);
+    return this.matchesService.getInnings(id, parseInt(inningsNumber));
   }
 
-  @Get(":id/power-plays")
-  @ApiOperation({ summary: "Get all power plays for match" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Power plays retrieved successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  getPowerPlays(@Param("id") id: string) {
-    return this.matchesService.getPowerPlays(id);
-  }
-
-  @Get(":id/power-plays/current")
-  @ApiOperation({ summary: "Get current power play status" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Current power play retrieved successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  getCurrentPowerPlay(@Param("id") id: string) {
-    return this.matchesService.getCurrentPowerPlay(id);
-  }
-
-  @Patch(":id/power-plays/:powerPlayIndex")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update power play details" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiParam({ name: "powerPlayIndex", description: "Power play index" })
-  @ApiResponse({
-    status: 200,
-    description: "Power play updated successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match or power play not found" })
-  updatePowerPlay(
-    @Param("id") id: string,
-    @Param("powerPlayIndex") powerPlayIndex: string,
-    @Body() updatePowerPlayDto: UpdatePowerPlayDto
-  ) {
-    return this.matchesService.updatePowerPlay(
-      id,
-      parseInt(powerPlayIndex),
-      updatePowerPlayDto
-    );
-  }
-
-  @Patch(":id/power-plays/:powerPlayIndex/activate")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Activate power play" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiParam({ name: "powerPlayIndex", description: "Power play index" })
-  @ApiResponse({
-    status: 200,
-    description: "Power play activated successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match or power play not found" })
-  activatePowerPlay(
-    @Param("id") id: string,
-    @Param("powerPlayIndex") powerPlayIndex: string
-  ) {
-    return this.matchesService.activatePowerPlay(id, parseInt(powerPlayIndex));
-  }
-
-  @Patch(":id/power-plays/deactivate")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Deactivate current power play" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Power play deactivated successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  deactivatePowerPlay(@Param("id") id: string) {
-    return this.matchesService.deactivatePowerPlay(id);
-  }
-
-  @Patch(":id/power-plays/:powerPlayIndex/stats")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update power play statistics" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiParam({ name: "powerPlayIndex", description: "Power play index" })
-  @ApiResponse({
-    status: 200,
-    description: "Power play stats updated successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match or power play not found" })
-  updatePowerPlayStats(
-    @Param("id") id: string,
-    @Param("powerPlayIndex") powerPlayIndex: string,
-    @Body() stats: PowerPlayStatsDto
-  ) {
-    return this.matchesService.updatePowerPlayStats(
-      id,
-      parseInt(powerPlayIndex),
-      stats
-    );
-  }
-
-  @Patch(":id/power-plays/auto-manage")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Auto-manage power plays based on current over" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Power plays auto-managed successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  autoManagePowerPlays(
-    @Param("id") id: string,
-    @Body() data: { currentOver: number; currentInnings: number }
-  ) {
-    return this.matchesService.autoManagePowerPlays(id, data.currentOver);
-  }
-
-  // Ball-by-Ball Management
-  @Post(":id/ball-by-ball")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Add ball-by-ball event" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 201,
-    description: "Ball-by-ball event added successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  addBallByBall(
-    @Param("id") id: string,
-    @Body() createBallByBallDto: CreateBallByBallDto
-  ) {
-    return this.matchesService.addBallByBall(id, createBallByBallDto);
-  }
-
-  @Get(":id/ball-by-ball")
-  @ApiOperation({ summary: "Get ball-by-ball events" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Ball-by-ball events retrieved successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  getBallByBall(@Param("id") id: string, @Query() filter: BallByBallFilterDto) {
-    return this.matchesService.getBallByBall(id, filter);
-  }
-
-  @Patch(":id/ball-by-ball/:ballIndex")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update ball-by-ball event" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiParam({ name: "ballIndex", description: "Ball index" })
-  @ApiResponse({
-    status: 200,
-    description: "Ball-by-ball event updated successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match or ball not found" })
-  updateBallByBall(
-    @Param("id") id: string,
-    @Param("ballIndex") ballIndex: string,
-    @Body() updateBallByBallDto: UpdateBallByBallDto
-  ) {
-    return this.matchesService.updateBallByBall(
-      id,
-      parseInt(ballIndex),
-      updateBallByBallDto
-    );
-  }
-
-  // DRS Reviews Management
-  @Post(":id/drs-reviews")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Add DRS review" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 201,
-    description: "DRS review added successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  addDRSReview(
-    @Param("id") id: string,
-    @Body() createDRSReviewDto: CreateDRSReviewDto
-  ) {
-    return this.matchesService.addDRSReview(id, createDRSReviewDto);
-  }
-
-  @Get(":id/drs-reviews")
-  @ApiOperation({ summary: "Get DRS reviews" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "DRS reviews retrieved successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  getDRSReviews(@Param("id") id: string, @Query() filter: DRSReviewFilterDto) {
-    return this.matchesService.getDRSReviews(id, filter);
-  }
-
-  @Patch(":id/drs-reviews/:reviewIndex")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update DRS review" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiParam({ name: "reviewIndex", description: "Review index" })
-  @ApiResponse({
-    status: 200,
-    description: "DRS review updated successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match or review not found" })
-  updateDRSReview(
-    @Param("id") id: string,
-    @Param("reviewIndex") reviewIndex: string,
-    @Body() updateDRSReviewDto: UpdateDRSReviewDto
-  ) {
-    return this.matchesService.updateDRSReview(
-      id,
-      parseInt(reviewIndex),
-      updateDRSReviewDto
-    );
-  }
-
-  // Highlights Management
-  @Post(":id/highlights")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Add match highlight" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 201,
-    description: "Highlight added successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  addHighlight(
-    @Param("id") id: string,
-    @Body() createHighlightDto: CreateHighlightDto
-  ) {
-    return this.matchesService.addHighlight(id, createHighlightDto);
-  }
-
-  @Get(":id/highlights")
-  @ApiOperation({ summary: "Get match highlights" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Highlights retrieved successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  getHighlights(@Param("id") id: string, @Query() filter: HighlightFilterDto) {
-    return this.matchesService.getHighlights(id, filter);
-  }
-
-  @Patch(":id/highlights/:highlightIndex")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update match highlight" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiParam({ name: "highlightIndex", description: "Highlight index" })
-  @ApiResponse({
-    status: 200,
-    description: "Highlight updated successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match or highlight not found" })
-  updateHighlight(
-    @Param("id") id: string,
-    @Param("highlightIndex") highlightIndex: string,
-    @Body() updateHighlightDto: UpdateHighlightDto
-  ) {
-    return this.matchesService.updateHighlight(
-      id,
-      parseInt(highlightIndex),
-      updateHighlightDto
-    );
-  }
-
-  // Timeline Management
-  @Post(":id/timeline")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Add timeline event" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 201,
-    description: "Timeline event added successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  addTimelineEvent(
-    @Param("id") id: string,
-    @Body() createTimelineEventDto: CreateTimelineEventDto
-  ) {
-    return this.matchesService.addTimelineEvent(id, createTimelineEventDto);
-  }
-
-  @Get(":id/timeline")
-  @ApiOperation({ summary: "Get match timeline" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Timeline retrieved successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  getTimeline(@Param("id") id: string, @Query() filter: TimelineFilterDto) {
-    return this.matchesService.getTimeline(id, filter);
-  }
-
-  // Fielding Positions Management
-  @Post(":id/fielding-positions")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Add fielding positions" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 201,
-    description: "Fielding positions added successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  addFieldingPositions(
-    @Param("id") id: string,
-    @Body() createFieldingPositionsDto: CreateFieldingPositionsDto
-  ) {
-    return this.matchesService.addFieldingPositions(
-      id,
-      createFieldingPositionsDto
-    );
-  }
-
-  @Get(":id/fielding-positions")
-  @ApiOperation({ summary: "Get fielding positions" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Fielding positions retrieved successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  getFieldingPositions(
-    @Param("id") id: string,
-    @Query() filter: FieldingPositionsFilterDto
-  ) {
-    return this.matchesService.getFieldingPositions(id, filter);
-  }
-
-  @Patch(":id/fielding-positions/:positionIndex")
-  @Roles(UserRole.ADMIN, UserRole.SCORER)
-  @ApiOperation({ summary: "Update fielding positions" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiParam({ name: "positionIndex", description: "Position index" })
-  @ApiResponse({
-    status: 200,
-    description: "Fielding positions updated successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match or position not found" })
-  updateFieldingPositions(
-    @Param("id") id: string,
-    @Param("positionIndex") positionIndex: string,
-    @Body() updateFieldingPositionsDto: UpdateFieldingPositionsDto
-  ) {
-    return this.matchesService.updateFieldingPositions(
-      id,
-      parseInt(positionIndex),
-      updateFieldingPositionsDto
-    );
-  }
-
-  // Match Settings Management
-  @Patch(":id/settings")
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: "Update match settings" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Match settings updated successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  updateMatchSettings(
-    @Param("id") id: string,
-    @Body() updateMatchSettingsDto: UpdateMatchSettingsDto
-  ) {
-    return this.matchesService.updateMatchSettings(id, updateMatchSettingsDto);
-  }
-
-  @Get(":id/settings")
-  @ApiOperation({ summary: "Get match settings" })
-  @ApiParam({ name: "id", description: "Match ID" })
-  @ApiResponse({
-    status: 200,
-    description: "Match settings retrieved successfully",
-  })
-  @ApiResponse({ status: 404, description: "Match not found" })
-  getMatchSettings(@Param("id") id: string) {
-    return this.matchesService.getMatchSettings(id);
-  }
-
-  // Player Statistics Management
+  // Player Statistics - GET is public
   @Get(":id/player-stats")
   @ApiOperation({ summary: "Get player statistics" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -933,7 +384,7 @@ export class MatchesController {
     return this.matchesService.getPlayerStatsById(id, playerId);
   }
 
-  // Partnership Management
+  // Partnership Management - GET is public
   @Get(":id/partnerships")
   @ApiOperation({ summary: "Get partnerships" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -962,7 +413,7 @@ export class MatchesController {
     return this.matchesService.getPartnershipsByInnings(id, parseInt(innings));
   }
 
-  // Live Match State
+  // Live Match State - GET is public
   @Get(":id/live-state")
   @ApiOperation({ summary: "Get live match state" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -975,7 +426,36 @@ export class MatchesController {
     return this.matchesService.getLiveState(id);
   }
 
+  // ===== PROTECTED ENDPOINTS (require authentication) =====
+
+  // Innings Management - PATCH is protected
+  @Patch(":id/innings/:inningsNumber")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update innings" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "inningsNumber", description: "Innings number (1 or 2)" })
+  @ApiResponse({
+    status: 200,
+    description: "Innings updated successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match or innings not found" })
+  @ApiBearerAuth()
+  updateInnings(
+    @Param("id") id: string,
+    @Param("inningsNumber") inningsNumber: string,
+    @Body() updateData: any
+  ) {
+    return this.matchesService.updateInnings(
+      id,
+      parseInt(inningsNumber),
+      updateData
+    );
+  }
+
+  // Live Match State - PATCH is protected
   @Patch(":id/live-state")
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SCORER)
   @ApiOperation({ summary: "Update live match state" })
   @ApiParam({ name: "id", description: "Match ID" })
@@ -984,7 +464,544 @@ export class MatchesController {
     description: "Live match state updated successfully",
   })
   @ApiResponse({ status: 404, description: "Match not found" })
+  @ApiBearerAuth()
   updateLiveState(@Param("id") id: string, @Body() liveStateData: any) {
     return this.matchesService.updateLiveState(id, liveStateData);
+  }
+
+  // ===== PROTECTED ENDPOINTS (require authentication) =====
+
+  // Playing XI Management
+  @Patch(":id/playing-xi")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update playing XI" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Playing XI updated successfully",
+  })
+  @ApiBearerAuth()
+  updatePlayingXI(@Param("id") id: string, @Body() playingXIDto: PlayingXIDto) {
+    return this.matchesService.updatePlayingXI(id, playingXIDto);
+  }
+
+  @Get(":id/playing-xi")
+  @ApiOperation({ summary: "Get playing XI" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Playing XI retrieved successfully",
+  })
+  getPlayingXI(@Param("id") id: string) {
+    return this.matchesService.getPlayingXI(id);
+  }
+
+  // Captain Management
+  @Patch(":id/captain")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update team captain" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Captain updated successfully",
+  })
+  @ApiBearerAuth()
+  updateCaptain(
+    @Param("id") id: string,
+    @Body() updateCaptainDto: UpdateCaptainDto
+  ) {
+    return this.matchesService.updateCaptain(id, updateCaptainDto);
+  }
+
+  // Vice Captain Management
+  @Patch(":id/vice-captain")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update team vice-captain" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Vice-captain updated successfully",
+  })
+  @ApiBearerAuth()
+  updateViceCaptain(
+    @Param("id") id: string,
+    @Body() updateViceCaptainDto: UpdateViceCaptainDto
+  ) {
+    return this.matchesService.updateViceCaptain(id, updateViceCaptainDto);
+  }
+
+  // Batting Order Management
+  @Patch(":id/batting-order")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update batting order" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Batting order updated successfully",
+  })
+  @ApiBearerAuth()
+  updateBattingOrder(
+    @Param("id") id: string,
+    @Body() updateBattingOrderDto: UpdateBattingOrderDto
+  ) {
+    return this.matchesService.updateBattingOrder(id, updateBattingOrderDto);
+  }
+
+  // Wicket Keeper Management
+  @Patch(":id/wicket-keeper")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update wicket-keeper" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Wicket-keeper updated successfully",
+  })
+  @ApiBearerAuth()
+  updateWicketKeeper(
+    @Param("id") id: string,
+    @Body() updateWicketKeeperDto: UpdateWicketKeeperDto
+  ) {
+    return this.matchesService.updateWicketKeeper(id, updateWicketKeeperDto);
+  }
+
+  // Squad Team Management
+  @Get(":id/squad/team/:team")
+  @ApiOperation({ summary: "Get squad for specific team" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "team", description: "Team (A or B)" })
+  @ApiResponse({
+    status: 200,
+    description: "Team squad retrieved successfully",
+  })
+  getSquadByTeam(@Param("id") id: string, @Param("team") team: string) {
+    return this.matchesService.getSquadForTeam(id, team as "A" | "B");
+  }
+
+  @Get(":id/available-players/:team")
+  @ApiOperation({ summary: "Get available players with capabilities" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "team", description: "Team (A or B)" })
+  @ApiResponse({
+    status: 200,
+    description: "Available players retrieved successfully",
+  })
+  getAvailablePlayers(@Param("id") id: string, @Param("team") team: string) {
+    return this.matchesService.getAvailablePlayersForTeam(
+      id,
+      team as "A" | "B"
+    );
+  }
+
+  // Toss Management
+  @Patch(":id/toss")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update toss information" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Toss information updated successfully",
+  })
+  @ApiBearerAuth()
+  updateToss(@Param("id") id: string, @Body() updateTossDto: UpdateTossDto) {
+    return this.matchesService.updateToss(id, updateTossDto);
+  }
+
+  @Get(":id/toss")
+  @ApiOperation({ summary: "Get toss information" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Toss information retrieved successfully",
+  })
+  getToss(@Param("id") id: string) {
+    return this.matchesService.getTossInfo(id);
+  }
+
+  // Notifications Management
+  @Post(":id/notifications")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Add match notification" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 201,
+    description: "Notification added successfully",
+  })
+  @ApiBearerAuth()
+  addNotification(
+    @Param("id") id: string,
+    @Body() notificationDto: NotificationDto
+  ) {
+    return this.matchesService.addNotification(id, notificationDto);
+  }
+
+  @Get(":id/notifications")
+  @ApiOperation({ summary: "Get match notifications" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiQuery({ name: "type", required: false, type: String })
+  @ApiResponse({
+    status: 200,
+    description: "Notifications retrieved successfully",
+  })
+  getNotifications(@Param("id") id: string, @Query("type") type?: string) {
+    return this.matchesService.getNotifications(id, type);
+  }
+
+  // WebSocket Stats Management
+  @Get(":id/websocket-stats")
+  @ApiOperation({ summary: "Get WebSocket connection stats" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "WebSocket stats retrieved successfully",
+  })
+  getWebSocketStats(@Param("id") id: string) {
+    return this.matchesService.getWebSocketStats(id);
+  }
+
+  @Patch(":id/websocket-stats")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update WebSocket stats" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "WebSocket stats updated successfully",
+  })
+  @ApiBearerAuth()
+  updateWebSocketStats(@Param("id") id: string, @Body() statsData: any) {
+    return this.matchesService.updateWebSocketStats(id, statsData);
+  }
+
+  // Power Play Management
+  @Post(":id/power-play")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Create power play" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 201,
+    description: "Power play created successfully",
+  })
+  @ApiBearerAuth()
+  createPowerPlay(
+    @Param("id") id: string,
+    @Body() createPowerPlayDto: CreatePowerPlayDto
+  ) {
+    return this.matchesService.addPowerPlay(id, createPowerPlayDto);
+  }
+
+  @Patch(":id/power-play/:powerPlayId")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update power play" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "powerPlayId", description: "Power Play ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Power play updated successfully",
+  })
+  @ApiBearerAuth()
+  updatePowerPlay(
+    @Param("id") id: string,
+    @Param("powerPlayId") powerPlayId: string,
+    @Body() updatePowerPlayDto: UpdatePowerPlayDto
+  ) {
+    return this.matchesService.updatePowerPlay(
+      id,
+      parseInt(powerPlayId),
+      updatePowerPlayDto
+    );
+  }
+
+  @Get(":id/power-play")
+  @ApiOperation({ summary: "Get power play information" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Power play information retrieved successfully",
+  })
+  getPowerPlay(@Param("id") id: string) {
+    return this.matchesService.getCurrentPowerPlay(id);
+  }
+
+  // Ball-by-Ball Management
+  @Post(":id/balls")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Add ball event" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 201,
+    description: "Ball event added successfully",
+  })
+  @ApiBearerAuth()
+  addBall(
+    @Param("id") id: string,
+    @Body() createBallByBallDto: CreateBallByBallDto
+  ) {
+    return this.matchesService.addBall(id, createBallByBallDto);
+  }
+
+  @Get(":id/balls")
+  @ApiOperation({ summary: "Get ball events" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Ball events retrieved successfully",
+  })
+  getBalls(@Param("id") id: string, @Query() filter: BallByBallFilterDto) {
+    return this.matchesService.getBalls(id, filter);
+  }
+
+  @Patch(":id/balls/:ballId")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update ball event" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "ballId", description: "Ball ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Ball event updated successfully",
+  })
+  @ApiBearerAuth()
+  updateBall(
+    @Param("id") id: string,
+    @Param("ballId") ballId: string,
+    @Body() updateBallByBallDto: UpdateBallByBallDto
+  ) {
+    return this.matchesService.updateBall(id, ballId, updateBallByBallDto);
+  }
+
+  // DRS Review Management
+  @Post(":id/drs-reviews")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Add DRS review" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 201,
+    description: "DRS review added successfully",
+  })
+  @ApiBearerAuth()
+  addDRSReview(
+    @Param("id") id: string,
+    @Body() createDRSReviewDto: CreateDRSReviewDto
+  ) {
+    return this.matchesService.addDRSReview(id, createDRSReviewDto);
+  }
+
+  @Get(":id/drs-reviews")
+  @ApiOperation({ summary: "Get DRS reviews" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "DRS reviews retrieved successfully",
+  })
+  getDRSReviews(@Param("id") id: string, @Query() filter: DRSReviewFilterDto) {
+    return this.matchesService.getDRSReviews(id, filter);
+  }
+
+  @Patch(":id/drs-reviews/:reviewId")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update DRS review" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "reviewId", description: "Review ID" })
+  @ApiResponse({
+    status: 200,
+    description: "DRS review updated successfully",
+  })
+  @ApiBearerAuth()
+  updateDRSReview(
+    @Param("id") id: string,
+    @Param("reviewId") reviewId: string,
+    @Body() updateDRSReviewDto: UpdateDRSReviewDto
+  ) {
+    return this.matchesService.updateDRSReview(
+      id,
+      parseInt(reviewId),
+      updateDRSReviewDto
+    );
+  }
+
+  // Highlights Management
+  @Post(":id/highlights")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Add highlight" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 201,
+    description: "Highlight added successfully",
+  })
+  @ApiBearerAuth()
+  addHighlight(
+    @Param("id") id: string,
+    @Body() createHighlightDto: CreateHighlightDto
+  ) {
+    return this.matchesService.addHighlight(id, createHighlightDto);
+  }
+
+  @Get(":id/highlights")
+  @ApiOperation({ summary: "Get highlights" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Highlights retrieved successfully",
+  })
+  getHighlights(@Param("id") id: string, @Query() filter: HighlightFilterDto) {
+    return this.matchesService.getHighlights(id, filter);
+  }
+
+  @Patch(":id/highlights/:highlightId")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update highlight" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "highlightId", description: "Highlight ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Highlight updated successfully",
+  })
+  @ApiBearerAuth()
+  updateHighlight(
+    @Param("id") id: string,
+    @Param("highlightId") highlightId: string,
+    @Body() updateHighlightDto: UpdateHighlightDto
+  ) {
+    return this.matchesService.updateHighlight(
+      id,
+      parseInt(highlightId),
+      updateHighlightDto
+    );
+  }
+
+  // Timeline Management
+  @Post(":id/timeline")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Add timeline event" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 201,
+    description: "Timeline event added successfully",
+  })
+  @ApiBearerAuth()
+  addTimelineEvent(
+    @Param("id") id: string,
+    @Body() createTimelineEventDto: CreateTimelineEventDto
+  ) {
+    return this.matchesService.addTimelineEvent(id, createTimelineEventDto);
+  }
+
+  @Get(":id/timeline")
+  @ApiOperation({ summary: "Get match timeline" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Timeline retrieved successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match not found" })
+  getTimeline(@Param("id") id: string, @Query() filter: TimelineFilterDto) {
+    return this.matchesService.getTimeline(id, filter);
+  }
+
+  // Fielding Positions Management
+  @Post(":id/fielding-positions")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Add fielding positions" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 201,
+    description: "Fielding positions added successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match not found" })
+  @ApiBearerAuth()
+  addFieldingPositions(
+    @Param("id") id: string,
+    @Body() createFieldingPositionsDto: CreateFieldingPositionsDto
+  ) {
+    return this.matchesService.addFieldingPositions(
+      id,
+      createFieldingPositionsDto
+    );
+  }
+
+  @Get(":id/fielding-positions")
+  @ApiOperation({ summary: "Get fielding positions" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Fielding positions retrieved successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match not found" })
+  getFieldingPositions(
+    @Param("id") id: string,
+    @Query() filter: FieldingPositionsFilterDto
+  ) {
+    return this.matchesService.getFieldingPositions(id, filter);
+  }
+
+  @Patch(":id/fielding-positions/:positionIndex")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Update fielding positions" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiParam({ name: "positionIndex", description: "Position index" })
+  @ApiResponse({
+    status: 200,
+    description: "Fielding positions updated successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match or position not found" })
+  @ApiBearerAuth()
+  updateFieldingPositions(
+    @Param("id") id: string,
+    @Param("positionIndex") positionIndex: string,
+    @Body() updateFieldingPositionsDto: UpdateFieldingPositionsDto
+  ) {
+    return this.matchesService.updateFieldingPositions(
+      id,
+      parseInt(positionIndex),
+      updateFieldingPositionsDto
+    );
+  }
+
+  // Match Settings Management
+  @Patch(":id/settings")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: "Update match settings" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Match settings updated successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match not found" })
+  @ApiBearerAuth()
+  updateMatchSettings(
+    @Param("id") id: string,
+    @Body() updateMatchSettingsDto: UpdateMatchSettingsDto
+  ) {
+    return this.matchesService.updateMatchSettings(id, updateMatchSettingsDto);
+  }
+
+  @Get(":id/settings")
+  @ApiOperation({ summary: "Get match settings" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Match settings retrieved successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match not found" })
+  getMatchSettings(@Param("id") id: string) {
+    return this.matchesService.getMatchSettings(id);
   }
 }
