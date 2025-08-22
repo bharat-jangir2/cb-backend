@@ -187,6 +187,26 @@ export class TournamentsService {
     return series.seriesTable;
   }
 
+  async getSeriesFixtures(id: string): Promise<any> {
+    const series = await this.seriesModel
+      .findById(id)
+      .select("matches")
+      .populate("matches", "name teamAId teamBId status startTime venue")
+      .populate("matches.teamAId", "name shortName")
+      .populate("matches.teamBId", "name shortName")
+      .exec();
+
+    if (!series) {
+      throw new NotFoundException("Series not found");
+    }
+
+    return {
+      seriesId: id,
+      fixtures: series.matches || [],
+      totalMatches: series.matches ? series.matches.length : 0,
+    };
+  }
+
   async updateSeries(id: string, updateSeriesDto: any): Promise<Series> {
     const series = await this.seriesModel
       .findByIdAndUpdate(id, updateSeriesDto, { new: true })

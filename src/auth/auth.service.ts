@@ -110,6 +110,26 @@ export class AuthService {
     return { message: "Successfully logged out" };
   }
 
+  async getCurrentUser(userId: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    const userObj = (user as any).toObject ? (user as any).toObject() : user;
+    const { passwordHash, ...result } = userObj;
+
+    return {
+      id: result._id || result.id,
+      username: result.username,
+      email: result.email,
+      role: result.role,
+      isActive: result.isActive,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+    };
+  }
+
   private async generateTokens(user: any) {
     const payload = { username: user.username, sub: user._id, role: user.role };
 

@@ -1571,4 +1571,60 @@ export class MatchesService {
     const match = await this.findById(matchId);
     return match.liveState;
   }
+
+  async startMatch(matchId: string): Promise<Match> {
+    const match = await this.findById(matchId);
+
+    if (match.status !== "SCHEDULED") {
+      throw new BadRequestException(
+        "Match can only be started if it's scheduled"
+      );
+    }
+
+    const updatedMatch = await this.matchModel
+      .findByIdAndUpdate(
+        matchId,
+        {
+          status: "LIVE",
+          "liveState.isLive": true,
+          "liveState.lastUpdateTime": new Date(),
+        },
+        { new: true }
+      )
+      .populate("teamAId", "name shortName")
+      .populate("teamBId", "name shortName");
+
+    if (!updatedMatch) {
+      throw new NotFoundException("Match not found");
+    }
+
+    return updatedMatch;
+  }
+
+  async endMatch(matchId: string): Promise<Match> {
+    const match = await this.findById(matchId);
+
+    if (match.status !== "LIVE") {
+      throw new BadRequestException("Match can only be ended if it's live");
+    }
+
+    const updatedMatch = await this.matchModel
+      .findByIdAndUpdate(
+        matchId,
+        {
+          status: "COMPLETED",
+          "liveState.isLive": false,
+          "liveState.lastUpdateTime": new Date(),
+        },
+        { new: true }
+      )
+      .populate("teamAId", "name shortName")
+      .populate("teamBId", "name shortName");
+
+    if (!updatedMatch) {
+      throw new NotFoundException("Match not found");
+    }
+
+    return updatedMatch;
+  }
 }

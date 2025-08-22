@@ -8,6 +8,19 @@ export class Scorecard {
   @Prop({ required: true, type: Types.ObjectId, ref: "Match", unique: true })
   matchId: Types.ObjectId;
 
+  // Tournament and Series references
+  @Prop({ type: Types.ObjectId, ref: "Tournament" })
+  tournamentId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: "Series" })
+  seriesId: Types.ObjectId;
+
+  @Prop()
+  matchNumber: number; // Match number within tournament/series
+
+  @Prop()
+  round: string; // Round information (e.g., "Group A", "Quarter Final", "Semi Final", "Final")
+
   // Innings data aggregated from Innings collection
   @Prop([
     {

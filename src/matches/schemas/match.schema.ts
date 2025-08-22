@@ -26,6 +26,19 @@ export class Match {
   @Prop({ type: Types.ObjectId, ref: "Team" })
   tossWinner: Types.ObjectId;
 
+  // Tournament and Series references
+  @Prop({ type: Types.ObjectId, ref: "Tournament" })
+  tournamentId: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: "Series" })
+  seriesId: Types.ObjectId;
+
+  @Prop()
+  matchNumber: number; // Match number within tournament/series (e.g., Match 1, Match 2)
+
+  @Prop()
+  round: string; // Round information (e.g., "Group A", "Quarter Final", "Semi Final", "Final")
+
   @Prop()
   tossDecision: string; // 'bat' or 'bowl'
 
@@ -205,3 +218,8 @@ MatchSchema.index({ isActive: 1 });
 MatchSchema.index({ "currentPlayers.striker": 1 });
 MatchSchema.index({ "currentPlayers.bowler": 1 });
 MatchSchema.index({ "liveState.isLive": 1 });
+MatchSchema.index({ tournamentId: 1 });
+MatchSchema.index({ seriesId: 1 });
+MatchSchema.index({ tournamentId: 1, seriesId: 1 });
+MatchSchema.index({ tournamentId: 1, matchNumber: 1 });
+MatchSchema.index({ seriesId: 1, matchNumber: 1 });

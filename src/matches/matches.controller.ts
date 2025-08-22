@@ -1004,4 +1004,36 @@ export class MatchesController {
   getMatchSettings(@Param("id") id: string) {
     return this.matchesService.getMatchSettings(id);
   }
+
+  @Post(":id/start")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "Start live match (Admin/Scorer only)" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Match started successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match not found" })
+  @ApiResponse({ status: 400, description: "Match cannot be started" })
+  @ApiBearerAuth()
+  startMatch(@Param("id") id: string) {
+    return this.matchesService.startMatch(id);
+  }
+
+  @Post(":id/end")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SCORER)
+  @ApiOperation({ summary: "End match (Admin/Scorer only)" })
+  @ApiParam({ name: "id", description: "Match ID" })
+  @ApiResponse({
+    status: 200,
+    description: "Match ended successfully",
+  })
+  @ApiResponse({ status: 404, description: "Match not found" })
+  @ApiResponse({ status: 400, description: "Match cannot be ended" })
+  @ApiBearerAuth()
+  endMatch(@Param("id") id: string) {
+    return this.matchesService.endMatch(id);
+  }
 }

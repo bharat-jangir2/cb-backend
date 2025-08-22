@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
@@ -140,5 +141,26 @@ export class UsersService {
     await this.userModel
       .findByIdAndUpdate(id, { lastLoginAt: new Date() })
       .exec();
+  }
+
+  async updateUserRole(id: string, role: string): Promise<User> {
+    // Validate role
+    const validRoles = ["ADMIN", "SCORER", "VIEWER"];
+    if (!validRoles.includes(role)) {
+      throw new BadRequestException(
+        "Invalid role. Must be one of: ADMIN, SCORER, VIEWER"
+      );
+    }
+
+    const user = await this.userModel
+      .findByIdAndUpdate(id, { role }, { new: true })
+      .select("-passwordHash")
+      .exec();
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    return user;
   }
 }

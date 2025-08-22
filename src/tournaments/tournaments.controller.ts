@@ -158,6 +158,26 @@ export class SeriesController {
     return this.tournamentsService.getSeriesTable(id);
   }
 
+  @Get(":id/fixtures")
+  @ApiOperation({ summary: "Get series fixtures" })
+  @ApiResponse({
+    status: 200,
+    description: "Series fixtures retrieved successfully",
+  })
+  getSeriesFixtures(@Param("id") id: string) {
+    return this.tournamentsService.getSeriesFixtures(id);
+  }
+
+  @Get(":id/points-table")
+  @ApiOperation({ summary: "Get series points table (alias for table)" })
+  @ApiResponse({
+    status: 200,
+    description: "Series points table retrieved successfully",
+  })
+  getSeriesPointsTable(@Param("id") id: string) {
+    return this.tournamentsService.getSeriesTable(id);
+  }
+
   @Patch(":id")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

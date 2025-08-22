@@ -105,4 +105,23 @@ export class TeamsController {
   remove(@Param("id") id: string) {
     return this.teamsService.remove(id);
   }
+
+  @Get(":id/players")
+  @ApiOperation({ summary: "Get team squad" })
+  @ApiParam({ name: "id", description: "Team ID" })
+  @ApiQuery({ name: "page", required: false, type: Number })
+  @ApiQuery({ name: "limit", required: false, type: Number })
+  @ApiQuery({ name: "role", required: false, type: String })
+  @ApiQuery({ name: "status", required: false, type: String })
+  @ApiResponse({
+    status: 200,
+    description: "Team squad retrieved successfully",
+  })
+  @ApiResponse({ status: 404, description: "Team not found" })
+  getTeamPlayers(
+    @Param("id") id: string,
+    @Query() paginationQuery: PaginationQueryDto
+  ) {
+    return this.teamsService.getTeamPlayers(id, paginationQuery);
+  }
 }

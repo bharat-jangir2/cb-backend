@@ -127,4 +127,104 @@ export class TeamsService {
       throw new NotFoundException("Team not found");
     }
   }
+
+  async getTeamPlayers(
+    teamId: string,
+    paginationQuery: PaginationQueryDto
+  ): Promise<PaginationResponseDto<any>> {
+    // Verify team exists
+    const team = await this.findById(teamId);
+    if (!team) {
+      throw new NotFoundException("Team not found");
+    }
+
+    const { page = 1, limit = 10, role, status } = paginationQuery;
+    const skip = (page - 1) * limit;
+
+    // Build filter for players
+    const filter: any = { isActive: true };
+
+    // Add role filter if provided
+    if (role && role.trim()) {
+      filter.role = new RegExp(role.trim(), "i");
+    }
+
+    // Add status filter if provided
+    if (status && status.trim()) {
+      filter.status = new RegExp(status.trim(), "i");
+    }
+
+    // TODO: In a real implementation, you would filter by team relationship
+    // For now, return all active players as a placeholder
+    // This should be updated when team-player relationship is implemented
+
+    const [players, total] = await Promise.all([
+      // This would be replaced with actual team-player relationship query
+      // For now, using a placeholder that returns all players
+      this.teamModel.aggregate([
+        {
+          $match: { _id: (team as any)._id || (team as any).id },
+        },
+        {
+          $lookup: {
+            from: "players",
+            localField: "_id",
+            foreignField: "teamId",
+            as: "players",
+          },
+        },
+        {
+          $unwind: "$players",
+        },
+        {
+          $match: filter,
+        },
+        {
+          $skip: skip,
+        },
+        {
+          $limit: limit,
+        },
+        {
+          $replaceRoot: { newRoot: "$players" },
+        },
+      ]),
+      // Count total players for this team
+      this.teamModel.aggregate([
+        {
+          $match: { _id: (team as any)._id || (team as any).id },
+        },
+        {
+          $lookup: {
+            from: "players",
+            localField: "_id",
+            foreignField: "teamId",
+            as: "players",
+          },
+        },
+        {
+          $unwind: "$players",
+        },
+        {
+          $match: filter,
+        },
+        {
+          $count: "total",
+        },
+      ]),
+    ]);
+
+    const totalCount = total.length > 0 ? total[0].total : 0;
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      data: players,
+      total: totalCount,
+      page,
+      limit,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1,
+    };
+  }
 }

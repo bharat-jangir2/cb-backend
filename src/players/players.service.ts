@@ -31,61 +31,61 @@ export class PlayersService {
   async findAll(
     paginationQuery: PaginationQueryDto
   ): Promise<PaginationResponseDto<Player>> {
-    const { 
-      page = 1, 
-      limit = 10, 
-      sortBy = 'fullName', 
-      sortOrder = 'asc', 
+    const {
+      page = 1,
+      limit = 10,
+      sortBy = "fullName",
+      sortOrder = "asc",
       search,
       nationality,
       role,
       status,
       battingStyle,
-      bowlingStyle
+      bowlingStyle,
     } = paginationQuery;
     const skip = (page - 1) * limit;
 
     // Build query filter
     const filter: any = { isActive: true };
-    
+
     // Add search functionality
     if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), 'i');
+      const searchRegex = new RegExp(search.trim(), "i");
       filter.$or = [
         { fullName: searchRegex },
         { shortName: searchRegex },
         { nationality: searchRegex },
         { role: searchRegex },
         { battingStyle: searchRegex },
-        { bowlingStyle: searchRegex }
+        { bowlingStyle: searchRegex },
       ];
     }
 
     // Add filter functionality
     if (nationality && nationality.trim()) {
-      filter.nationality = new RegExp(nationality.trim(), 'i');
+      filter.nationality = new RegExp(nationality.trim(), "i");
     }
 
     if (role && role.trim()) {
-      filter.role = new RegExp(role.trim(), 'i');
+      filter.role = new RegExp(role.trim(), "i");
     }
 
     if (status && status.trim()) {
-      filter.status = new RegExp(status.trim(), 'i');
+      filter.status = new RegExp(status.trim(), "i");
     }
 
     if (battingStyle && battingStyle.trim()) {
-      filter.battingStyle = new RegExp(battingStyle.trim(), 'i');
+      filter.battingStyle = new RegExp(battingStyle.trim(), "i");
     }
 
     if (bowlingStyle && bowlingStyle.trim()) {
-      filter.bowlingStyle = new RegExp(bowlingStyle.trim(), 'i');
+      filter.bowlingStyle = new RegExp(bowlingStyle.trim(), "i");
     }
 
     // Build sort object
     const sortObject: any = {};
     if (sortBy) {
-      sortObject[sortBy] = sortOrder === 'desc' ? -1 : 1;
+      sortObject[sortBy] = sortOrder === "desc" ? -1 : 1;
     }
 
     const [players, total] = await Promise.all([
@@ -181,5 +181,60 @@ export class PlayersService {
     await this.playerModel
       .findByIdAndUpdate(id, { lastMatchDate: new Date() })
       .exec();
+  }
+
+  async getPlayerStats(
+    playerId: string,
+    format?: string,
+    period?: string
+  ): Promise<any> {
+    const player = await this.findById(playerId);
+    if (!player) {
+      throw new NotFoundException("Player not found");
+    }
+
+    // This is a placeholder implementation
+    // In a real application, you would aggregate data from match statistics
+    const stats = {
+      playerId: (player as any)._id || (player as any).id,
+      playerName: player.fullName,
+      format: format || "all",
+      period: period || "career",
+      batting: {
+        matches: 0,
+        innings: 0,
+        runs: 0,
+        highestScore: 0,
+        average: 0,
+        strikeRate: 0,
+        fifties: 0,
+        hundreds: 0,
+        fours: 0,
+        sixes: 0,
+      },
+      bowling: {
+        matches: 0,
+        innings: 0,
+        overs: 0,
+        wickets: 0,
+        bestBowling: "0/0",
+        average: 0,
+        economy: 0,
+        strikeRate: 0,
+        fourWickets: 0,
+        fiveWickets: 0,
+      },
+      fielding: {
+        catches: 0,
+        stumpings: 0,
+        runOuts: 0,
+      },
+    };
+
+    // TODO: Implement actual statistics aggregation from match data
+    // This would involve querying the match statistics collection
+    // and aggregating data based on format and period filters
+
+    return stats;
   }
 }

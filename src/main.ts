@@ -42,6 +42,7 @@ async function bootstrap() {
     .addTag("teams", "Team management")
     .addTag("players", "Player management")
     .addTag("matches", "Match management")
+    .addTag("scorecard", "Scorecard and match statistics")
     .addTag("balls", "Ball-by-ball scoring")
     .addTag("odds", "Odds management")
     .addTag("agents", "AI agent management")

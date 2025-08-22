@@ -171,4 +171,22 @@ export class UsersController {
       message: existingUser ? "Email already registered" : "Email available",
     };
   }
+
+  @Patch(":id/role")
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: "Change user role (Admin only)" })
+  @ApiParam({ name: "id", description: "User ID" })
+  @ApiResponse({
+    status: 200,
+    description: "User role updated successfully",
+  })
+  @ApiResponse({ status: 404, description: "User not found" })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden - Admin access required",
+  })
+  @ApiResponse({ status: 400, description: "Invalid role" })
+  updateUserRole(@Param("id") id: string, @Body() body: { role: UserRole }) {
+    return this.usersService.updateUserRole(id, body.role);
+  }
 }
